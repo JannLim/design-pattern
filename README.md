@@ -1510,5 +1510,98 @@ class PoachedMeat extends Cook {
     }
 }
 ```
+### 策略模式
+定义一组算法，将其分别封装起来，使他们可以相互替换，让算法可以在不影响客户端的情况下发生变化。  
+**模式组成：**  
+组成（角色）|关系|作用  
+:-|:-|:-  
+抽象策略类|具体策略类的父类|定义策略的公共属性  
+具体策略类|抽象策略类的子类|继承抽象策略类，同时实现具体的策略内容  
+环境类|包含一个抽象策略类的引用|连接上下文信息，给出策略结果  
+**用途：** 一个系统需要动态的在几种算法中选择一种；如果在一个系统里面有很多类，他们的区别仅在于他们的行为，那么利用策略模式可以让一个对象在许多行为中动态的选择一种；不希望客户端知道复杂的，与算法相关的数据结构，在策略类中封装算法相关的数据结构，提高算法的保密性与安全性。  
+**优点：** 策略之间可以自由切换；新增加一个策略只需要增加策略类即可，符合开闭原则；避免多重条件语句(if-else)。  
+**缺点：** 客户端必须知道所有的策略类，并自行决定要用哪一种；每个策略都是单独的类，如果备选数量很多的话，就会出现很多的类。  
+```java
+public class StrategyPattern {
+
+    public static void main(String[] args) {
+        BigDecimal amt = BigDecimal.valueOf(100);
+        // 普通客户
+        Settlement normal = new Settlement(new NormalCustomer());
+        System.out.println("支付金额 == > " + normal.calPrice(amt));
+        // vip
+        Settlement vip = new Settlement(new VipCustomer());
+        System.out.println("支付金额 == > " + vip.calPrice(amt));
+        // vvip
+        Settlement vvip = new Settlement(new VvipCustomer());
+        System.out.println("支付金额 == > " + vvip.calPrice(amt));
+    }
+
+}
+
+/**
+ * 客户类型 - 抽象策略类
+ */
+interface CustomerType {
+
+    // 计算最终价格
+    BigDecimal calPrice(BigDecimal amt);
+
+}
+
+/**
+ * 普通客户 - 具体策略类
+ */
+class NormalCustomer implements CustomerType {
+
+    @Override
+    public BigDecimal calPrice(BigDecimal amt) {
+        System.out.println("当前为 普通客户");
+        return amt;
+    }
+}
+
+/**
+ * vip - 具体策略类
+ */
+class VipCustomer implements CustomerType {
+
+    @Override
+    public BigDecimal calPrice(BigDecimal amt) {
+        System.out.println("当前为 VIP");
+        return amt.multiply(BigDecimal.valueOf(0.9));
+    }
+}
+
+/**
+ * vvip - 具体策略类
+ */
+class VvipCustomer implements CustomerType {
+
+    @Override
+    public BigDecimal calPrice(BigDecimal amt) {
+        System.out.println("当前为 VVIP");
+        return amt.multiply(BigDecimal.valueOf(0.85));
+    }
+}
+
+/**
+ * 结算 - 环境类
+ */
+class Settlement {
+
+    private CustomerType customerType;
+
+    public Settlement(CustomerType customerType) {
+        this.customerType = customerType;
+    }
+
+    // 结算
+    public BigDecimal calPrice(BigDecimal amt) {
+        return customerType.calPrice(amt);
+    }
+
+}
+```
 
 [design_pattern]:https://s2.ax1x.com/2020/02/15/1xjmCQ.md.png
