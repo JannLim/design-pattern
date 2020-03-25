@@ -1239,6 +1239,276 @@ class DynamicProxy implements InvocationHandler {
 抽象元素|具体元素的父类|定义描述元素的公共属性及方法，同时定义accept操作，以访问者为入参  
 具体元素|抽象元素的子类|实现accept方法  
 对象结构|外部访问，包含元素的对象集合|用于存放元素对象，且提供便利的内部元素方法  
+**用途：** 对象结构中，对象对应的类很少改变，但经常要在结构上定义新的操作。  
+**优点：** 新增访问操作变得简单方便，符合开闭原则；将有关元素对象的访问操作集中到一个访问者中，而不是分散到一个个元素类中，使类的职责更加清晰，符合单一职责原则。  
+**缺点：** 增加新的元素困难，需要相应增加每个访问者的相关操作，违背了开闭原则；元素对象需要暴漏一些自己的内部操作，否则无法提供访问者访问，破坏了封装性。  
+```java
+public class VisitorPattern {
 
+    public static void main(String[] args) {
+        // 医生开药单
+        Prescriptions prescriptions = new Prescriptions();
+        prescriptions.add(new MedicineA("阿莫西林", BigDecimal.valueOf(15)));
+        prescriptions.add(new MedicineB("999感冒灵",BigDecimal.valueOf(18)));
+
+        // 付钱
+        Cashier cashier = new Cashier("收银员1");
+        prescriptions.accept(cashier);
+
+        // 拿药
+        Pharmacist pharmacist = new Pharmacist("药师1");
+        prescriptions.accept(pharmacist);
+    }
+
+}
+
+/**
+ * 药品父类 - 抽象元素
+ * 定义描述元素的公共属性及方法，同时定义accept操作，以访问者为入参
+ */
+abstract class Medicine {
+    protected String name;
+    protected BigDecimal price;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public void setPrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public abstract void accept(Visitor visitor);
+}
+
+/**
+ * 药品 - 具体元素
+ */
+class MedicineA extends Medicine {
+
+    public MedicineA(){}
+
+    public MedicineA(String name, BigDecimal price) {
+        super.name = name;
+        super.price = price;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visitor(this);
+    }
+}
+
+/**
+ * 药品 - 具体元素
+ */
+class MedicineB extends Medicine {
+
+    public MedicineB(){}
+
+    public MedicineB(String name, BigDecimal price) {
+        super.name = name;
+        super.price = price;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+        visitor.visitor(this);
+    }
+}
+
+/**
+ * 抽象访问者
+ * 为每一个具体元素声明操作，可以利用重载，也可以不用，具体的被调用在具体元素中，以后添加元素只需要修改访问者即可
+ */
+abstract class Visitor {
+    protected String name;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public abstract void visitor(MedicineA medicine);
+
+    public abstract void visitor(MedicineB medicine);
+}
+
+/**
+ * 收银员 - 具体访问者
+ */
+class Cashier extends Visitor {
+
+    public Cashier(){}
+
+    public Cashier(String name){
+        super.name = name;
+    }
+
+    @Override
+    public void visitor(MedicineA medicine) {
+        System.out.println("收银员：" + name + " 给药品：" + medicine.getName() + " 收费：" + medicine.getPrice());
+    }
+
+    @Override
+    public void visitor(MedicineB medicine) {
+        System.out.println("收银员：" + name + " 给药品：" + medicine.getName() + " 收费：" + medicine.getPrice());
+    }
+}
+
+/**
+ * 药师 - 具体访问者
+ */
+class Pharmacist extends Visitor {
+
+    public Pharmacist(){}
+
+    public Pharmacist(String name){
+        super.name = name;
+    }
+
+    @Override
+    public void visitor(MedicineA medicine) {
+        System.out.println("药师：" + name + " 取药：" + medicine.getName());
+    }
+
+    @Override
+    public void visitor(MedicineB medicine) {
+        System.out.println("药师：" + name + " 取药：" + medicine.getName());
+    }
+}
+
+/**
+ * 药单 - 对象结构
+ */
+class Prescriptions {
+    private List<Medicine> medicines;
+
+    public Prescriptions(){
+        medicines = new ArrayList<>();
+    }
+
+    public void add(Medicine medicine) {
+        medicines.add(medicine);
+    }
+
+    public void remove(Medicine medicine) {
+        medicines.remove(medicine);
+    }
+
+    public void accept(Visitor visitor) {
+        Iterator<Medicine> iterator = medicines.iterator();
+        while (iterator.hasNext()) {
+            iterator.next().accept(visitor);
+        }
+    }
+}
+```
+### 模板模式  
+在一个方法中定义算法骨架，将一些步骤延迟到子类中，模板方法可以在不改变算法结构的情况下，重新定义算法中的某些步骤。  
+模板方法就是基于继承的代码复用技术，在模板模式中，我们可以将相同的方法放到父类中，不同的方法放到子类中。  
+**模式组成：**  
+组成（角色）|关系|作用  
+:-|:-|:-  
+抽象类|具体子类的父类|定义模板骨架，提取相同的方法  
+具体子类|实现了抽象类|重写父类中定义的需要被重写的方法  
+**用途：** 实现一个算法的不变部分，将可变部分留给子类实现；通过子类决定父类中的某个步骤是否执行。  
+**优点：** 封装不变的部分，拓展可变的部分；提取公共代码，便于维护；行为由父类控制，子类负责实现。  
+**缺点：** 每一个不同的实现都需要一个子类来实现，使得系统更加庞大。  
+```java
+public class TemplatePattern {
+
+    public static void main(String[] args) {
+        // 清朝时蔬
+        Vegetables vegetables = new Vegetables();
+        vegetables.cook();
+        System.out.println(" ======================== ");
+        // 水煮肉片
+        PoachedMeat poachedMeat = new PoachedMeat();
+        poachedMeat.cook();
+    }
+
+}
+
+/**
+ * 抽象父类
+ */
+abstract class Cook {
+
+    // 准备原材料
+    protected abstract void prepareRawMaterials();
+
+    // 倒油加热
+    protected void addOil() {
+        System.out.println("开火，倒油，加热");
+    }
+
+    // 加入材料进行翻炒
+    protected void stirFry() {
+        System.out.println("炒啊炒");
+    }
+
+    // 加入调料
+    protected abstract void addCondiment();
+
+    // 关火出锅
+    protected void finish() {
+        System.out.println("炒啊炒，装盘出锅");
+    }
+
+    // 炒菜
+    public void cook() {
+        prepareRawMaterials();
+        addOil();
+        stirFry();
+        addCondiment();
+        finish();
+    }
+
+}
+
+/**
+ * 清炒时蔬 - 具体子类
+ */
+class Vegetables extends Cook {
+
+    @Override
+    public void prepareRawMaterials() {
+        System.out.println("准备青菜，洗净装盘");
+    }
+
+    @Override
+    public void addCondiment() {
+        System.out.println("顺序加入糖，盐，老抽，醋");
+    }
+}
+
+/**
+ * 水煮肉片 - 具体子类
+ */
+class PoachedMeat extends Cook {
+
+    @Override
+    public void prepareRawMaterials() {
+        System.out.println("准备猪肉切片，准备青菜洗净，豆芽洗净");
+    }
+
+    @Override
+    public void addCondiment() {
+        System.out.println("加入火锅底料，花椒，糖，盐，老抽，醋");
+    }
+}
+```
 
 [design_pattern]:https://s2.ax1x.com/2020/02/15/1xjmCQ.md.png
