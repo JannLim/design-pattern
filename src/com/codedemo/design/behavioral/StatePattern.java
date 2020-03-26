@@ -12,7 +12,7 @@ import java.math.BigDecimal;
  * 银行账户系统中，对于账号存在多种状态，不同的状态允许可不不同的操作。
  * 比如，账户状态分为：正常、冻结、注销，客户去银行存钱或者取钱，都需要先检查账户的状态，正常的账户才可以进行操作
  * 此时把账户状态抽象，其中正常、冻结、注销为具体状态，客户的操作即为环境
- * @author: linjuanjuan@hzlianyin.com
+ * @author: linjuanjuan
  * @date: 2020-03-26 10:44
  */
 public class StatePattern {

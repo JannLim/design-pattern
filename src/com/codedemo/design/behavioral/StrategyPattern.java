@@ -14,7 +14,7 @@ import java.math.BigDecimal;
  * 客户类型 - 抽象策略类
  * 普通客户 / vip / vvip - 具体策略类
  * 结算 - 环境类
- * @author: linjuanjuan@hzlianyin.com
+ * @author: linjuanjuan
  * @date: 2020-03-25 16:38
  */
 public class StrategyPattern {
