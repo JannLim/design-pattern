@@ -1603,5 +1603,135 @@ class Settlement {
 
 }
 ```
+### 状态模式
+在很多情况下，对象的行为依赖于它的一个或者多个变化的属性，这些可变的属性被称之为状态，也就是行为依赖状态，当该对象因为外部的互动导致状态发生变化，那么它的行为也会发生相应的变化。对我们来说，对象的行为是被状态控制的，什么状态要做出什么行为，这就是状态模式。状态模式就是允许对象在内部状态发生改变时改变它的行为，对象看起来好像修改了它的类。  
+**模式组成：**  
+组成（角色）|关系|作用  
+:-|:-|:-  
+抽象状态|具体状态的父类|定义对象的行为  
+具体状态|抽象状态的子类|实现具体的行为  
+环境角色|包含一个抽象状态的引用，外部调用|定义客户感兴趣的接口，用以控制对象的行为  
+**用途：** 行为随状态改变而改变的场景；if-else语句的替代者。  
+**优点：** 封装了转换规则；将所有与某个状态有关的行为全部放在一个类中，并且可以方便的增加新的状态，只需要改变对象的状态就可以改变对象的行为。  
+**缺点：** 增加系统中类的个数，使用不当容易导致程序结构和代码的混乱；增加新的状态需要修改负责状态转换的相关代码。  
+```java
+public class StatePattern {
+
+    public static void main(String[] args) {
+        // 正常客户
+        CustomerOperate normal = new CustomerOperate(new NormalState());
+        normal.saveMoney(BigDecimal.valueOf(100));
+        normal.withdrawMoney(BigDecimal.valueOf(50));
+        normal.withdrawMoney(BigDecimal.valueOf(100));
+        System.out.println(" =========================== ");
+        // 冻结客户
+        CustomerOperate freeze = new CustomerOperate(new FreezeState());
+        freeze.saveMoney(BigDecimal.valueOf(100));
+        freeze.withdrawMoney(BigDecimal.valueOf(50));
+        System.out.println(" =========================== ");
+        // 注销客户
+        CustomerOperate logout = new CustomerOperate(new LogoutState());
+        logout.saveMoney(BigDecimal.valueOf(100));
+        logout.withdrawMoney(BigDecimal.valueOf(50));
+    }
+
+}
+
+/**
+ * 账户状态 - 抽象状态
+ */
+interface AccountState {
+
+    // 存钱
+    void saveMoney(BigDecimal amt);
+
+    // 取钱
+    void withdrawMoney(BigDecimal amt);
+
+}
+
+/**
+ * 正常状态 - 具体状态
+ */
+class NormalState implements AccountState {
+
+    private BigDecimal balance;
+
+    public NormalState() {
+        balance = BigDecimal.ZERO;
+    }
+
+    @Override
+    public void saveMoney(BigDecimal amt) {
+        balance = amt.add(balance);
+        System.out.println("账户状态正常，成功存入 == > " + amt);
+    }
+
+    @Override
+    public void withdrawMoney(BigDecimal amt) {
+        if (balance.compareTo(amt) > 0) {
+            System.out.println("账户状态正常，成功取出 == > " + amt);
+        } else {
+            System.out.println("账户状态正常，账户余额不足");
+        }
+    }
+}
+
+/**
+ * 账户冻结 - 具体状态
+ */
+class FreezeState implements AccountState {
+
+    @Override
+    public void saveMoney(BigDecimal amt) {
+        System.out.println("您的账户已被冻结");
+    }
+
+    @Override
+    public void withdrawMoney(BigDecimal amt) {
+        System.out.println("您的账户已被冻结");
+    }
+}
+
+/**
+ * 注销状态 - 具体状态
+ */
+class LogoutState implements AccountState {
+
+    @Override
+    public void saveMoney(BigDecimal amt) {
+        System.out.println("您的账户已被注销");
+    }
+
+    @Override
+    public void withdrawMoney(BigDecimal amt) {
+        System.out.println("您的账户已被注销");
+    }
+}
+
+/**
+ * 客户操作 - 环境类
+ */
+class CustomerOperate {
+
+    private AccountState accountState;
+
+    public CustomerOperate(AccountState accountState) {
+        this.accountState = accountState;
+    }
+
+    // 存钱
+    public void saveMoney(BigDecimal amt) {
+        accountState.saveMoney(amt);
+    }
+
+    // 取钱
+    public void withdrawMoney(BigDecimal amt) {
+        accountState.withdrawMoney(amt);
+    }
+
+}
+```
+
 
 [design_pattern]:https://s2.ax1x.com/2020/02/15/1xjmCQ.md.png
