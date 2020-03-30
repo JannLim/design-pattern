@@ -2021,5 +2021,157 @@ class BlackCaretaker {
     }
 }
 ```
+### 中介者模式
+用一个中介者对象封装一系列的对象交互，中介者使各对象不需要显示的相互作用，从而使得解耦合，而且可以独立的改变他们之间的交互。  
+在中介者模式中，使用中介者对象来封装对象之间的关系，各个对象不需要知道具体信息，通过中介者对象就可以实现相互通信。它减少了对象之间的相互关系，提高了系统之间的可复用性，简化了系统的结构。  
+**模式组成：**  
+组成（角色）|关系|作用  
+:-|:-|:-  
+抽象同事类|具体同事类的父类|定义同事类的公共属性及方法  
+具体同事类|抽象同事类的子类|实现抽象同事类定义的方法，拥有一个中介者作为属性或者实现方法中有中介者作为入参  
+抽象中介者|具体中介者的父类|实现了同事对象到中介者之间的接口，定义具体中介者的公共属性  
+具体中介者|抽象中介者的子类|实现了抽象中介者中定义的方法，每个同事类只需要知道自己的行为，但是需要认识中介者（即拥有中介者作为入参的方法）
+**用途：** 系统中对象之间存在比较复杂的引用关系，导致他们之间的依赖关系结构混乱而且难以复用该对象；想通过一个中间类来封装多个类中的行为，而且又不想生成太多的子类。  
+**优点：** 简化了对象之间的关系，将系统的各个对象之间的关系进行封装，将各个同事类进行解耦，降低系统的耦合度；减少子类的生成；减少各个同事类之间的设计与实现。  
+**缺点：** 由于中介者对象封装了系统中对象之间的相互关系，导致其变得非常复杂，使得系统维护比较困难。  
+```java
+public class MediatorPattern {
+
+    public static void main(String[] args) {
+        // 创建一个租客和房东都认识的中介
+        MediatorStructure structure = new MediatorStructure();
+        // 租客
+        Tenant tenant = new Tenant("张三", structure);
+        // 房东
+        LandLord landLord = new LandLord("王武", structure);
+        // 中介建立房东与租客的连接
+        structure.setTenant(tenant);
+        structure.setLandLord(landLord);
+
+        // 租客询问房租
+        tenant.contact("您好，请问您的四室一厅的房子一个月多少钱");
+        // 房东回复
+        landLord.contact("一个月6500元");
+    }
+
+}
+
+/**
+ * 抽象中介者
+ */
+abstract class Mediator {
+
+    public abstract void connect(String message, Colleague colleague);
+
+}
+
+/**
+ * 中介
+ */
+class MediatorStructure extends Mediator {
+
+    private Tenant tenant;
+    private LandLord landLord;
+
+    public Tenant getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(Tenant tenant) {
+        this.tenant = tenant;
+    }
+
+    public LandLord getLandLord() {
+        return landLord;
+    }
+
+    public void setLandLord(LandLord landLord) {
+        this.landLord = landLord;
+    }
+
+    @Override
+    public void connect(String message, Colleague colleague) {
+        // 租客发送信息，则房东可以得到信息，反之则反
+        if (colleague instanceof Tenant) {
+            System.out.println("租客" + colleague.getName() + "说：" + message);
+            landLord.getMessage(message);
+        } else {
+            System.out.println("房东" + colleague.getName() + "说：" + message);
+            tenant.getMessage(message);
+        }
+    }
+}
+
+/**
+ * 抽象同事类
+ */
+abstract class Colleague {
+
+    protected String name;
+    protected Mediator mediator;
+
+    public Colleague(String name, Mediator mediator) {
+        this.name = name;
+        this.mediator = mediator;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Mediator getMediator() {
+        return mediator;
+    }
+
+    public void setMediator(Mediator mediator) {
+        this.mediator = mediator;
+    }
+}
+
+/**
+ * 租客 - 具体同事
+ */
+class Tenant extends Colleague {
+
+    public Tenant(String name, Mediator mediator) {
+        super(name, mediator);
+    }
+
+    // 联系
+    public void contact(String message) {
+        mediator.connect(message, this);
+    }
+
+    // 获取信息
+    public void getMessage(String message) {
+        System.out.println("租客" + name + "得到的信息：" + message);
+    }
+}
+
+/**
+ * 房东 - 具体同事
+ */
+class LandLord extends Colleague {
+
+    public LandLord(String name, Mediator mediator) {
+        super(name, mediator);
+    }
+
+    // 联系
+    public void contact(String message) {
+        mediator.connect(message, this);
+    }
+
+    // 获取信息
+    public void getMessage(String message) {
+        System.out.println("房东" + name + "得到的信息：" + message);
+    }
+
+}
+```
 
 [design_pattern]:https://s2.ax1x.com/2020/02/15/1xjmCQ.md.png
