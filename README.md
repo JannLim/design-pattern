@@ -1833,6 +1833,193 @@ class Company implements WechatCustomer {
     }
 }
 ```
+### 备忘录模式
+备忘录模式又叫快照模式，用于在不破坏封装的前提条件下，捕获一个对象的内部状态，并且在该对象之外保存这个状态，这样可以在以后将这个对象恢复到原先保存的状态。
+类似于游戏的存档，备忘录模式给软件提供了一种后悔药机制，可以使系统恢复到某一特定的历史状态。  
+**模式组成：**  
+组成（角色）|关系|作用  
+:-|:-|:-  
+发起人(Originator)|外部访问，真实需要被保存状态的对象|可以创建备忘录，用以保存当前状态，也可以恢复当前对象至某个状态  
+负责人(Caretaker)|包含一个备忘录属性|负责传递备忘录信息，不能直接访问备忘录  
+备忘录(Memento)||存储发起人的内部状态，有两个等效接口。**窄接口：** 除发起人以外的任何人看到的都是窄接口，只允许传递对象，无法访问内部属性。**宽接口：** 发起人看到的是宽接口，允许发起人读取所有数据，以便恢复发起人的内部状态。  
+**用途：** 需要保存某个对象在某些时刻的一些状态；如果用一个接口来让其他对象得到这些状态，会暴露对象的实现细节和破坏对象的封装性，一个对象不希望外部直接访问他的内部状态，可以通过负责人间接访问。  
+**优点：** 给用户提供了一种恢复状态的机制，可以方便的恢复到某个历史状态；实现了信息封装，使用户不需要关心状态的保存细节。  
+**缺点：** 消耗资源，如果类的成员变量过多，势必会占用较大的资源，并且每一次保存都会消耗内存。  
+**白箱模式**  
+```java
+public class MementoWhitePattern {
 
+    public static void main(String[] args) {
+        // 初始化发起人对象
+        WhiteOriginator old = new WhiteOriginator("初始化");
+        System.out.println("初始化的对象 ==> " + old.getState());
+        // 交给负责人存档
+        WhiteCaretaker caretaker = new WhiteCaretaker();
+        caretaker.saveMemento(old.saveMemento());
+        old.setState("修改");
+        System.out.println("修改后的对象状态 ==> " + old.getState());
+        // 恢复存档
+        old.restoreMemento(caretaker.getMemento());
+        System.out.println("恢复存档的对象 ==> " + old.getState());
+    }
+
+}
+
+/**
+ * 备忘录 - 存储状态的对象，状态是公共方法，所以可以被任何对象所访问
+ */
+class WhiteMemento {
+    private String state;
+
+    public WhiteMemento(String state) {
+        this.state = state;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+}
+
+/**
+ * 发起人 - 需要被存储状态的对象
+ */
+class WhiteOriginator {
+    private String state;
+
+    public WhiteOriginator(String state) {
+        this.state = state;
+    }
+
+    // 创建存档
+    public WhiteMemento saveMemento() {
+        return new WhiteMemento(state);
+    }
+
+    // 恢复存档
+    public void restoreMemento(WhiteMemento memento) {
+        this.state = memento.getState();
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+}
+
+/**
+ * 负责人 - 仅仅负责传递备忘录，由于备忘录中存储的属性具有公共的get、set方法，所以可以被负责人所访问，访问不访问全靠开发人员自觉
+ */
+class WhiteCaretaker {
+
+    private WhiteMemento memento;
+
+    public void saveMemento(WhiteMemento memento) {
+        this.memento = memento;
+    }
+
+    public WhiteMemento getMemento() {
+        System.out.println("我是负责人，我知道备忘录中存储的信息 ==> " + memento.getState());
+        return memento;
+    }
+
+}
+```
+**黑箱模式**  
+```java
+public class MementoBlackPattern {
+
+    public static void main(String[] args) {
+        BlackOriginator originator = new BlackOriginator("初始化");
+        System.out.println("发起人状态 ==> " + originator.getState());
+        // 存档
+        BlackCaretaker caretaker = new BlackCaretaker();
+        caretaker.saveMemento(originator.saveMemento());
+        originator.setState("修改");
+        System.out.println("发起人状态 ==> " + originator.getState());
+        // 恢复存档
+        originator.restoreMemento(caretaker.getMemento());
+        System.out.println("发起人状态 ==> " + originator.getState());
+    }
+
+}
+
+/**
+ * 备忘录 - 对外开放的备忘录父类，不具备任何属性，保证外部对象访问时，只能拿到窄接口
+ */
+interface Memento {
+
+}
+
+/**
+ * 发起人 - 拥有一个私有的备忘录类，继承了备忘录父类，这样就能保证备忘录仅为自己和发起人提供宽接口
+ */
+class BlackOriginator {
+
+    private String state;
+
+    public BlackOriginator(String state) {
+        this.state = state;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    // 存档
+    public Memento saveMemento() {
+        return new BlackMemento(state);
+    }
+
+    // 恢复存档
+    public void restoreMemento(Memento memento) {
+        this.state = ((BlackMemento) memento).getState();
+    }
+
+    // 提供窄接口的备忘录
+    private class BlackMemento implements Memento {
+
+        private String state;
+
+        public BlackMemento(String state) {
+            this.state = state;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public void setState(String state) {
+            this.state = state;
+        }
+    }
+
+}
+
+/**
+ * 负责人 - 拥有一个备忘录父类作为属性，但是由于父类中只提供了窄接口，所以什么都看不到
+ */
+class BlackCaretaker {
+    private Memento memento;
+
+    public Memento getMemento() {
+        return this.memento;
+    }
+
+    public void saveMemento(Memento memento) {
+        this.memento = memento;
+    }
+}
+```
 
 [design_pattern]:https://s2.ax1x.com/2020/02/15/1xjmCQ.md.png
