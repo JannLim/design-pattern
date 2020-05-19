@@ -2382,5 +2382,173 @@ class LunchIterator implements MyIterator {
     }
 }
 ```
+### 解释器模式
+定立一种语言的文法，并且建立解释器来解释该语言中的句子。解释器模式描述了如何构成一个简单的语言解释器，主要应用在使用面向对象语言开发的编译器中。它描述了如何为一个简单的语言定义一个文法，如何在该语言中表示一个句子，以及如何解释这些句子。  
+**模式组成：**  
+组成（角色）|关系|作用|  
+:-|:-|:-|  
+抽象表达式|终结符表达式，非终结符表达式的父类|定义表达式的解释操作|  
+终结符表达式|抽象表达式的子类|实现文法中元素相关的解释操作，通常一个解释器只有一个终结符表达式|  
+非终结符表达式|抽象表达式的子类|实现文法中运算符或者其他关键字的解释，非终结符表达式根据逻辑的复杂程度而增加，原则上每个文法都对应一个非终结符表达式|  
+环境角色|存放终结符的具体值|存放文法中终结符的具体值|  
+**用途：** 一些重复出现的问题可以用一种简单的语言来进行表达；可以将一个需要解释器执行的语言中的句子表示为一个抽象语法树。  
+**优点：** 易于改变和拓展文法；实现文法较为容易；增加新的表达式解释器较为方便。  
+**缺点：** 对于复杂的文法难以维护；执行效率较低。  
+```java
+public class InterpreterPattern {
+
+    public static void main(String[] args) {
+        String exp = "one add two";
+
+        Context context = new Context();
+        context.put("one", 1);
+        context.put("two", 2);
+        ExpressionParse expressionParse = new ExpressionParse();
+        int result = expressionParse.parse(exp, context);
+        System.out.println(result);
+    }
+
+}
+
+/**
+ * 环境类
+ */
+class Context {
+
+    private final Map<String, Integer> map = new HashMap<>();
+
+    public void put(String key, Integer value) {
+        map.put(key, value);
+    }
+
+    public Integer get(String key) {
+        Integer value = map.get(key);
+        if (value == null) {
+            throw new RuntimeException("参数不存在");
+        }
+        return value;
+    }
+
+}
+
+/**
+ * 抽象解释器
+ */
+abstract class Interpreter {
+
+    public abstract int interpret(Context context);
+
+}
+
+/**
+ * 非终结符表达式  +
+ */
+class AddInterpreter extends Interpreter {
+
+    // 左终结符
+    private Interpreter left;
+    // 右终结符
+    private Interpreter right;
+
+    public AddInterpreter(Interpreter left, Interpreter right) {
+        this.left = left;
+        this.right = right;
+    }
+
+    @Override
+    public int interpret(Context context) {
+        return left.interpret(context) + right.interpret(context);
+    }
+}
+
+/**
+ * 非终结符表达式  -
+ */
+class SubInterpreter extends Interpreter {
+
+    // 左终结符
+    private Interpreter left;
+    // 右终结符
+    private Interpreter right;
+
+    public SubInterpreter(Interpreter left, Interpreter right) {
+        this.left = left;
+        this.right = right;
+    }
+
+    @Override
+    public int interpret(Context context) {
+        return left.interpret(context) - right.interpret(context);
+    }
+}
+
+/**
+ * 终结符表达式
+ */
+class Variable extends Interpreter {
+
+    private String key;
+
+    public Variable(String key) {
+        this.key = key;
+    }
+
+    @Override
+    public int interpret(Context context) {
+        return context.get(key);
+    }
+}
+
+/**
+ * 语法解析器
+ */
+class ExpressionParse {
+
+    public int parse(String expression, Context context) {
+        List<String> exps = parseStr(expression);
+        if (exps.size() != 3) {
+            throw new RuntimeException("语法格式错误");
+        }
+        // 0-操作符 1/2为数值
+        String[] exp = new String[3];
+        for (String temp : exps) {
+            if (isOperator(temp)) {
+                exp[0] = temp;
+            } else {
+                if (exp[1] == null || exp[1].length() == 0) {
+                    exp[1] = temp;
+                } else {
+                    exp[2] = temp;
+                }
+            }
+        }
+
+        return getExpression(exp[1], exp[2], exp[0]).interpret(context);
+    }
+
+    // 截取字符串
+    private List<String> parseStr(String expression) {
+        String[] exps = expression.trim().split(" ");
+        return Arrays.asList(exps);
+    }
+
+    // 判断是否是非终结符
+    private boolean isOperator(String symbol) {
+        return "add".equals(symbol) || "sub".equals(symbol);
+    }
+
+    // 计算
+    private Interpreter getExpression(String left, String right, String symbol) {
+        if ("add".equals(symbol)) {
+            return new AddInterpreter(new Variable(left), new Variable(right));
+        } else if ("sub".equals(symbol)) {
+            return new SubInterpreter(new Variable(left), new Variable(right));
+        } else {
+            throw new RuntimeException("操作符非法");
+        }
+    }
+
+}
+```
 
 [design_pattern]:https://s2.ax1x.com/2020/02/15/1xjmCQ.md.png
