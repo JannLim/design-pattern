@@ -15,6 +15,14 @@ import java.lang.reflect.Proxy;
  * Proxy 代理对象 包含对真实对象的引用
  * 动态代理不继承或者抽象对象，利用jdk动态的在内存中创建对象，实现目标对象的代理功能，在编译时还没有实际的代理class类，
  * 在运行时动态生成，添加进jvm中的
+ *
+ * jdk采用的是读取接口信息，cglib是覆盖父类的方法，目的都是生成一个新的类，去实现增强代码逻辑的功能
+ * jdk proxy对于用户而言，必须有一个接口实现，目标类相对来说复杂
+ * cglib可以代理任意一个普通的类，没有要求
+ * cglib 代理逻辑相对来说更加复杂，效率，调用效率更高，生成一个包含所有逻辑的FastClass，不需要反射调用
+ * jdk proxy生成代理逻辑简单，执行效率较低，每次都需要反射调用
+ *
+ * cglib不能代理final的方法
  * @author: linjuanjuan
  * @date: 2020-02-16 22:47
  */
@@ -28,6 +36,7 @@ public class DynamicProxyPattern {
 
 /**
  * 抽象对象
+ * 必须实现接口，否则jdk无法进行动态代理
  */
 interface DynamicSubject {
     void buyMac();
